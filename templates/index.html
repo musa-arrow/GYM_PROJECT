@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Kullanım Tahmin Sistemi</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .header-buttons {
+            margin-top: 20px;
+        }
+
+        .info-btn {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .form-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            color: #4a5568;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fff;
+            color: #2d3748;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group input:hover,
+        .form-group select:hover {
+            border-color: #cbd5e0;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .checkbox-group input[type="checkbox"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: 400;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submit-btn i {
+            margin-right: 10px;
+        }
+
+        .result-container {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-title {
+            color: #2d3748;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prediction-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .prediction-label {
+            text-align: center;
+            color: #4a5568;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .info-section {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .info-section h3 {
+            color: #2d3748;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-section p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .form-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .modal-header h2 {
+            color: #2d3748;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #718096;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .chart-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-description {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .chart-description h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* Yoğunluk Göstergesi */
+        .intensity-indicator {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .intensity-bar {
+            width: 100%;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .intensity-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: all 0.5s ease;
+            background: linear-gradient(90deg, #48bb78, #ed8936, #e53e3e);
+        }
+
+        .intensity-text {
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Öneriler */
+        .recommendations {
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(72, 187, 120, 0.1);
+            border-radius: 12px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .recommendations h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recommendation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .recommendation-item {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 3px solid #48bb78;
+            color: #4a5568;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .recommendation-item i {
+            color: #48bb78;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-dumbbell"></i> Gym Kullanım Tahmin Sistemi</h1>
+            <p>Makine öğrenmesi ile spor salonu yoğunluğunu tahmin edin</p>
+            <div class="header-buttons">
+                <button class="info-btn" onclick="toggleFeaturesInfo()">
+                    <i class="fas fa-chart-bar"></i> En Önemli Özellikler
+                </button>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3><i class="fas fa-info-circle"></i> Nasıl Çalışır?</h3>
+            <p>Bu sistem, çeşitli faktörleri analiz ederek spor salonunun ne kadar yoğun olacağını tahmin eder. Lütfen aşağıdaki bilgileri doldurun ve tahmininizi alın.</p>
+        </div>
+
+        <form id="predictionForm">
+            <div class="form-container">
+
+                <div class="form-group">
+                    <label for="day_of_week"><i class="fas fa-calendar-week"></i> Haftanın Günü</label>
+                    <select id="day_of_week" name="day_of_week" required>
+                        <option value="">Gün Seçin</option>
+                        <option value="1">Pazartesi</option>
+                        <option value="2">Salı</option>
+                        <option value="3">Çarşamba</option>
+                        <option value="4">Perşembe</option>
+                        <option value="5">Cuma</option>
+                        <option value="6">Cumartesi</option>
+                        <option value="0">Pazar</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="temperature"><i class="fas fa-thermometer-half"></i> Sıcaklık (°C)</label>
+                    <input type="number" id="temperature" name="temperature" step="0.1" min="-20" max="50" placeholder="Örn: 25.5" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="month"><i class="fas fa-calendar"></i> Ay</label>
+                    <select id="month" name="month" required>
+                        <option value="">Ay Seçin</option>
+                        <option value="1">Ocak</option>
+                        <option value="2">Şubat</option>
+                        <option value="3">Mart</option>
+                        <option value="4">Nisan</option>
+                        <option value="5">Mayıs</option>
+                        <option value="6">Haziran</option>
+                        <option value="7">Temmuz</option>
+                        <option value="8">Ağustos</option>
+                        <option value="9">Eylül</option>
+                        <option value="10">Ekim</option>
+                        <option value="11">Kasım</option>
+                        <option value="12">Aralık</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="hour"><i class="fas fa-clock"></i> Saat</label>
+                    <select id="hour" name="hour" required>
+                        <option value="">Saat Seçin</option>
+                        <option value="6">06:00</option>
+                        <option value="7">07:00</option>
+                        <option value="8">08:00</option>
+                        <option value="9">09:00</option>
+                        <option value="10">10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22">22:00</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-container">
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_weekend" name="is_weekend" disabled>
+                        <label for="is_weekend">Hafta Sonu</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_holiday" name="is_holiday">
+                        <label for="is_holiday">Tatil Günü</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_start_of_semester" name="is_start_of_semester">
+                        <label for="is_start_of_semester">Dönem Başı</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_during_semester" name="is_during_semester">
+                        <label for="is_during_semester">Dönem İçi</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <i class="fas fa-chart-line"></i>
+                Tahmin Et
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Tahmin hesaplanıyor...</p>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-title">
+                <i class="fas fa-trophy"></i>
+                Tahmin Sonucu
+            </div>
+            <div class="prediction-value" id="predictionValue">-</div>
+            <div class="prediction-label" id="predictionLabel">Kişi</div>
+
+            <!-- Yoğunluk Göstergesi -->
+            <div class="intensity-indicator" id="intensityIndicator">
+                <div class="intensity-bar">
+                    <div class="intensity-fill" id="intensityFill"></div>
+                </div>
+                <div class="intensity-text" id="intensityText">Yoğunluk Seviyesi</div>
+            </div>
+
+            <!-- Öneriler -->
+            <div class="recommendations" id="recommendations">
+                <h4><i class="fas fa-lightbulb"></i> Öneriler</h4>
+                <div class="recommendation-list" id="recommendationList">
+                    <!-- Öneriler buraya eklenecek -->
+                </div>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="errorText">Bir hata oluştu. Lütfen tekrar deneyin.</span>
+        </div>
+    </div>
+
+    <!-- Features Modal -->
+    <div id="featuresModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-chart-bar"></i> En Önemli Özellikler</h2>
+                <button class="close-btn" onclick="closeFeaturesModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="chart-container">
+                <img src="/static/GYM.png" alt="En Önemli Özellikler Grafiği" />
+            </div>
+
+            <div class="chart-description">
+                <h3><i class="fas fa-info-circle"></i> Grafik Açıklaması</h3>
+                <p>Bu grafik, makine öğrenmesi modelinin spor salonu yoğunluğunu tahmin ederken hangi özelliklerin en önemli olduğunu gösterir. Yüksek değerler, o özelliğin tahmin üzerinde daha büyük etkisi olduğunu belirtir.</p>
+
+                <h4>En Önemli Özellikler:</h4>
+                <ul>
+                    <li><strong>Saat:</strong> Günün hangi saatinde olduğu yoğunluğu büyük ölçüde etkiler</li>
+                    <li><strong>Haftanın Günü:</strong> Hafta içi vs hafta sonu farkı önemli</li>
+                    <li><strong>Sıcaklık:</strong> Hava durumu spor salonu tercihlerini etkiler</li>
+                    <li><strong>Ay:</strong> Mevsimsel değişiklikler yoğunluğu etkiler</li>
+                    <li><strong>Dönem Durumu:</strong> Okul dönemleri spor salonu kullanımını etkiler</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('predictionForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const resultContainer = document.getElementById('resultContainer');
+            const errorMessage = document.getElementById('errorMessage');
+            const predictionValue = document.getElementById('predictionValue');
+            const predictionLabel = document.getElementById('predictionLabel');
+
+            const startSemester = document.getElementById('is_start_of_semester');
+            const duringSemester = document.getElementById('is_during_semester');
+
+            startSemester.addEventListener('change', function() {
+                   if(this.checked) {
+                         duringSemester.checked = false;
+                 }
+            });
+
+duringSemester.addEventListener('change', function() {
+    if(this.checked) {
+        startSemester.checked = false;
+    }
+});
+
+
+            // Form gönderildiğinde
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Loading göster
+                loading.classList.add('show');
+                resultContainer.classList.remove('show');
+                errorMessage.classList.remove('show');
+                submitBtn.disabled = true;
+
+                try {
+                    // Form verilerini topla
+                    const formData = new FormData(form);
+
+                    const data = {
+                        day_of_week: parseInt(formData.get('day_of_week')),
+                        is_weekend: formData.get('is_weekend') ? 1 : 0,
+                        is_holiday: formData.get('is_holiday') ? 1 : 0,
+                        temperature: parseFloat(formData.get('temperature')),
+                        is_start_of_semester: formData.get('is_start_of_semester') ? 1 : 0,
+                        is_during_semester: formData.get('is_during_semester') ? 1 : 0,
+                        month: parseInt(formData.get('month')),
+                        hour: parseInt(formData.get('hour'))
+                    };
+
+                    // Debug için veriyi konsola yazdır
+                    console.log('Gönderilen veri:', data);
+
+                    // API'ye gönder
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    console.log('Response status:', response.status);
+                    console.log('Response ok:', response.ok);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Error response:', errorText);
+                        throw new Error(`Sunucu hatası: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('Gelen sonuç:', result);
+
+                    // Sonucu göster
+                    const prediction = result.predicted_price;
+                    predictionValue.textContent = prediction;
+                    predictionLabel.textContent = `${prediction} Kişi`;
+
+                    // Yoğunluk göstergesi ve öneriler
+                    updateIntensityIndicator(prediction);
+                    generateRecommendations(prediction, data);
+
+                    resultContainer.classList.add('show');
+
+                } catch (error) {
+                    console.error('Hata:', error);
+                    document.getElementById('errorText').textContent = error.message || 'Tahmin hesaplanırken bir hata oluştu. Lütfen bilgilerinizi kontrol edin ve tekrar deneyin.';
+                    errorMessage.classList.add('show');
+                } finally {
+                    // Loading gizle
+                    loading.classList.remove('show');
+                    submitBtn.disabled = false;
+                }
+            });
+
+            // Varsayılan değerleri ata
+            document.getElementById('day_of_week').value = '1'; // Pazartesi
+            document.getElementById('temperature').value = '20';
+            document.getElementById('month').value = '1'; // Ocak
+            document.getElementById('hour').value = '12'; // 12:00
+
+            // Gün seçimi değiştiğinde hafta sonu kontrolü
+            document.getElementById('day_of_week').addEventListener('change', function() {
+                const selectedDay = parseInt(this.value);
+                const weekendCheckbox = document.getElementById('is_weekend');
+                const holidayCheckbox = document.getElementById('is_holiday');
+
+                // Cumartesi (6) veya Pazar (0) seçildiğinde
+                if (selectedDay === 6 || selectedDay === 0) {
+                    weekendCheckbox.checked = true;
+                    holidayCheckbox.checked = true;
+                    holidayCheckbox.disabled = true; // Tatil günü checkbox'ını devre dışı bırak
+                } else {
+                    // Hafta içi günlerde sadece hafta sonu checkbox'ını temizle
+                    weekendCheckbox.checked = false;
+                    holidayCheckbox.disabled = false; // Tatil günü checkbox'ını aktif et
+                }
+            });
+
+            // Form validasyonu
+            form.addEventListener('input', function() {
+                const requiredFields = form.querySelectorAll('[required]');
+                let allValid = true;
+
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        allValid = false;
+                    }
+                });
+
+                submitBtn.disabled = !allValid;
+            });
+        });
+
+        // Modal fonksiyonları
+        function toggleFeaturesInfo() {
+            const modal = document.getElementById('featuresModal');
+            modal.classList.add('show');
+        }
+
+        function closeFeaturesModal() {
+            const modal = document.getElementById('featuresModal');
+            modal.classList.remove('show');
+        }
+
+        // Modal dışına tıklandığında kapat
+        document.getElementById('featuresModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFeaturesModal();
+            }
+        });
+
+        // ESC tuşu ile kapat
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFeaturesModal();
+            }
+        });
+
+        // Yoğunluk göstergesi güncelleme
+        function updateIntensityIndicator(prediction) {
+            const intensityFill = document.getElementById('intensityFill');
+            const intensityText = document.getElementById('intensityText');
+
+            let percentage, level, color;
+
+            if (prediction <= 20) {
+                percentage = 20;
+                level = 'Düşük';
+                color = '#48bb78';
+            } else if (prediction <= 40) {
+                percentage = 50;
+                level = 'Orta';
+                color = '#ed8936';
+            } else {
+                percentage = 80;
+                level = 'Yüksek';
+                color = '#e53e3e';
+            }
+
+            intensityFill.style.width = `${percentage}%`;
+            intensityText.textContent = `${level} Yoğunluk (${prediction} kişi)`;
+        }
+
+        // Öneriler oluşturma
+        function generateRecommendations(prediction, data) {
+            const recommendationList = document.getElementById('recommendationList');
+            const recommendations = [];
+
+            // Yoğunluk bazlı öneriler
+            if (prediction <= 20) {
+                recommendations.push({
+                    icon: 'fas fa-thumbs-up',
+                    text: 'Mükemmel! Salon çok sakin, rahatça spor yapabilirsiniz.'
+                });
+                recommendations.push({
+                    icon: 'fas fa-clock',
+                    text: 'Bu saatlerde gelmeye devam edin, en ideal zaman.'
+                });
+            } else if (prediction <= 40) {
+                recommendations.push({
+                    icon: 'fas fa-balance-scale',
+                    text: 'Orta yoğunlukta, makul bir kalabalık var.'
+                });
+                recommendations.push({
+                    icon: 'fas fa-user-friends',
+                    text: 'Arkadaşlarınızla gelmek için uygun bir zaman.'
+                });
+            } else {
+                recommendations.push({
+                    icon: 'fas fa-exclamation-triangle',
+                    text: 'Yoğun saatler! Erken gelmeyi düşünün.'
+                });
+                recommendations.push({
+                    icon: 'fas fa-clock',
+                    text: 'Daha sakin saatler: 06:00-08:00'
+                });
+            }
+
+            // Saat bazlı öneriler
+            if (data.hour >= 6 && data.hour <= 8) {
+                recommendations.push({
+                    icon: 'fas fa-sun',
+                    text: 'Sabah sporu için mükemmel! Enerjinizi güne yayın.'
+                });
+            } else if (data.hour >= 18 && data.hour <= 20) {
+                recommendations.push({
+                    icon: 'fas fa-moon',
+                    text: 'Akşam sporu popüler saatler. Erken gelmeyi düşünün.'
+                });
+            }
+
+            // Hafta sonu önerileri
+            if (data.is_weekend) {
+                recommendations.push({
+                    icon: 'fas fa-calendar-weekend',
+                    text: 'Hafta sonu genelde daha yoğun olur. Sabah saatlerini tercih edin.'
+                });
+            }
+
+            // Önerileri HTML'e ekle
+            recommendationList.innerHTML = recommendations.map(rec =>
+                `<div class="recommendation-item">
+                    <i class="${rec.icon}"></i>
+                    ${rec.text}
+                </div>`
+            ).join('');
+        }
+
+        // Tahmin grafiği oluşturma fonksiyonunu kaldır
+        // createPredictionChart fonksiyonu artık gerekli değil
+    </script>
+</body>
+</html>
